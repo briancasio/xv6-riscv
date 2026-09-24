@@ -452,7 +452,7 @@ kwait2(uint64 addr, uint64 ruaddr)
           if (ruaddr != 0) {
             struct rusage ru;
             ru.cputime = pp->cputime;
-            if (copyout(p->pagetable, ruaddr, (char *)&ru, sizeof(ru)) < 0) {
+            if (copyout(p->pagetable, p->sz, ruaddr, (char *)&ru, sizeof(ru)) < 0) {
               release(&pp->lock);
               release(&wait_lock);
               return -1;
