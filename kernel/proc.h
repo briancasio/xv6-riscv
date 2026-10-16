@@ -106,4 +106,5 @@ struct proc {
   char name[16];               // Process name (debugging)
   uint cputime;                // CPU time used (in ticks)
   int priority;                // Process priority (0-49)
+  uint64 readytime;            // Time when process became RUNNABLE (ticks)
 };

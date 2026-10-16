@@ -21,11 +21,20 @@ main(int argc, char **argv)
   if (nprocs < 0)
     exit(-1);
 
-  printf("pid\tstate\t\tsize\tppid\tpriority\tname\n");
+  int now = uptime();
+
+  printf("pid\tstate\t\tsize\tage\tpriority\tcputime\tppid\tname\n");
   for (i=0; i<nprocs; i++) {
     state = states[uproc[i].state];
-    printf("%d\t%s\t%ld\t%d\t%d\t\t%s\n", uproc[i].pid, state,
-                   uproc[i].size, uproc[i].ppid, uproc[i].priority, uproc[i].name);
+    int age = 0;
+    if (uproc[i].state == RUNNABLE) {
+      age = now - uproc[i].readytime;
+      if (age < 0)
+        age = 0;
+    }
+    printf("%d\t%s\t%ld\t%d\t%d\t\t%d\t%d\t%s\n",
+           uproc[i].pid, state, uproc[i].size, age,
+           uproc[i].priority, uproc[i].cputime, uproc[i].ppid, uproc[i].name);
   }
 
   exit(0);
