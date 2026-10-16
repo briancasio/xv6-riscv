@@ -11,19 +11,17 @@ int main(void) {
     printf("Priority scheduler test\n");
     printf("Fork low priority (0) and high priority (40)\n");
 
-    // Low priority child
-    if (fork() == 0) {
-        setpriority(0);
-        burn(80000000);
-        printf("LOW priority (0) done\n");
-        exit(0);
-    }
-
-    // High priority child
+    // Fork high first so it sets priority 40 before low competes at 0
     if (fork() == 0) {
         setpriority(40);
         burn(80000000);
         printf("HIGH priority (40) done\n");
+        exit(0);
+    }
+    if (fork() == 0) {
+        setpriority(0);
+        burn(80000000);
+        printf("LOW priority (0) done\n");
         exit(0);
     }
 

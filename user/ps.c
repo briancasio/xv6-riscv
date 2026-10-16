@@ -23,7 +23,7 @@ main(int argc, char **argv)
 
   int now = uptime();
 
-  printf("pid\tstate\t\tsize\tage\tpriority\tcputime\tppid\tname\n");
+  printf("pid\tstate\t\tsize\tage\tpriority\teffpri\tcputime\tppid\tname\n");
   for (i=0; i<nprocs; i++) {
     state = states[uproc[i].state];
     int age = 0;
@@ -32,9 +32,10 @@ main(int argc, char **argv)
       if (age < 0)
         age = 0;
     }
-    printf("%d\t%s\t%ld\t%d\t%d\t\t%d\t%d\t%s\n",
+    printf("%d\t%s\t%ld\t%d\t%d\t\t%d\t%d\t%d\t%s\n",
            uproc[i].pid, state, uproc[i].size, age,
-           uproc[i].priority, uproc[i].cputime, uproc[i].ppid, uproc[i].name);
+           uproc[i].priority, uproc[i].eff_priority,
+           uproc[i].cputime, uproc[i].ppid, uproc[i].name);
   }
 
   exit(0);

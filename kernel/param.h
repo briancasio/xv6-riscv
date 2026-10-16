@@ -17,3 +17,6 @@
 #define SCHED_ROUNDROBIN  0
 #define SCHED_PRIORITY    1
 #define SCHEDULER         SCHED_PRIORITY  // Change to SCHED_ROUNDROBIN to switch back
+
+#define MAX_EFF_PRIORITY  99
+#define AGING_DIVISOR     10

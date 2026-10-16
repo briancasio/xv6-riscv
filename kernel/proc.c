@@ -503,6 +503,7 @@ kgetprocs(uint64 addr)
       ps.size = p->sz;
       ps.ppid = p->parent ? p->parent->pid : 0;
       ps.priority = p->priority;
+      ps.eff_priority = (p->state == RUNNABLE) ? effective_priority(p) : p->priority;
       ps.readytime = p->readytime;
       ps.cputime = p->cputime;
       safestrcpy(ps.name, p->name, sizeof(ps.name));
@@ -518,6 +519,15 @@ kgetprocs(uint64 addr)
     }
   }
   return count;
+}
+
+static int
+effective_priority(struct proc *p)
+{
+  int eff = p->priority + (int)((ticks - p->readytime) / AGING_DIVISOR);
+  if (eff > MAX_EFF_PRIORITY)
+    eff = MAX_EFF_PRIORITY;
+  return eff;
 }
 
 // Per-CPU process scheduler.
@@ -566,11 +576,16 @@ scheduler(void)
 
     for (p = proc; p < &proc[NPROC]; p++) {
       acquire(&p->lock);
-      if (p->state == RUNNABLE && p->priority > best_prio) {
+      if (p->state == RUNNABLE) {
+        int eff = effective_priority(p);
+        if (eff > best_prio) {
         if (best)
           release(&best->lock);
-        best_prio = p->priority;
+        best_prio = eff;
         best = p;
+        } else {
+          release(&p->lock);
+        }
       } else {
         release(&p->lock);
       }
