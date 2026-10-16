@@ -17,6 +17,7 @@ struct pstat {
   enum procstate state; // Process state
   uint64 size;          // Size of process memory (bytes)
   int ppid;             // Parent process ID
+  int priority;         // Process priority (0-49)
   char name[16];        // Parent command name
 };
 
