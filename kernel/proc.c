@@ -535,41 +535,61 @@ scheduler(void)
 
   c->proc = 0;
   for (;;) {
-    // The most recent process to run may have had interrupts
-    // turned off; enable them to avoid a deadlock if all
-    // processes are waiting. Then turn them back off
-    // to avoid a possible race between an interrupt
-    // and wfi.
     intr_on();
     intr_off();
 
+#if SCHEDULER == SCHED_ROUNDROBIN
+    // --- Round Robin scheduler (original) ---
     int found = 0;
     for (p = proc; p < &proc[NPROC]; p++) {
       acquire(&p->lock);
       if (p->state == RUNNABLE) {
-        // Switch to chosen process.  It is the process's job
-        // to release its lock and then reacquire it
-        // before jumping back to us.
         p->state = RUNNING;
         c->proc = p;
         swtch(&c->context, &p->context);
-
-        // Don't re-enable interrupts on release.
         mycpu()->intena = 0;
-
-        // Process is done running for now.
-        // It should have changed its p->state before coming back.
         c->proc = 0;
         found = 1;
       }
       release(&p->lock);
     }
     if (found == 0) {
-      // nothing to run; stop running on this core until an interrupt.
       asm volatile("wfi");
     }
+
+#elif SCHEDULER == SCHED_PRIORITY
+    // --- Priority scheduler ---
+    // Find the RUNNABLE process with the highest effective priority.
+    // Effective priority = priority (aging added in Task 5).
+    struct proc *best = 0;
+    int best_prio = -1;
+
+    for (p = proc; p < &proc[NPROC]; p++) {
+      acquire(&p->lock);
+      if (p->state == RUNNABLE && p->priority > best_prio) {
+        if (best)
+          release(&best->lock);
+        best_prio = p->priority;
+        best = p;
+      } else {
+        release(&p->lock);
+      }
+    }
+
+    if (best) {
+      best->state = RUNNING;
+      c->proc = best;
+      swtch(&c->context, &best->context);
+      mycpu()->intena = 0;
+      c->proc = 0;
+      release(&best->lock);
+    } else {
+      asm volatile("wfi");
+    }
+#endif
   }
 }
+
 
 // Switch to scheduler.  Must hold only p->lock
 // and have changed proc->state. Saves and restores
