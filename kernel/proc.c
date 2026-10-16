@@ -486,6 +486,15 @@ kwait2(uint64 addr, uint64 ruaddr)
   }
 }
 
+static int
+effective_priority(struct proc *p)
+{
+  int eff = p->priority + (int)((ticks - p->readytime) / AGING_DIVISOR);
+  if (eff > MAX_EFF_PRIORITY)
+    eff = MAX_EFF_PRIORITY;
+  return eff;
+}
+
 // Return the current number of active processes and fill in the array of struct pstat.
 int
 kgetprocs(uint64 addr)
@@ -519,15 +528,6 @@ kgetprocs(uint64 addr)
     }
   }
   return count;
-}
-
-static int
-effective_priority(struct proc *p)
-{
-  int eff = p->priority + (int)((ticks - p->readytime) / AGING_DIVISOR);
-  if (eff > MAX_EFF_PRIORITY)
-    eff = MAX_EFF_PRIORITY;
-  return eff;
 }
 
 // Per-CPU process scheduler.
