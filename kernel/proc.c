@@ -480,6 +480,37 @@ kwait2(uint64 addr, uint64 ruaddr)
   }
 }
 
+// Return the current number of active processes and fill in the array of struct pstat.
+int
+kgetprocs(uint64 addr)
+{
+  struct proc *p;
+  struct proc *curproc = myproc();
+  struct pstat ps;
+  int count = 0;
+
+  for(p = proc; p < &proc[NPROC]; p++){
+    acquire(&p->lock);
+    if(p->state != UNUSED && p->state != USED){
+      ps.pid = p->pid;
+      ps.state = p->state;
+      ps.size = p->sz;
+      ps.ppid = p->parent ? p->parent->pid : 0;
+      safestrcpy(ps.name, p->name, sizeof(ps.name));
+      release(&p->lock);
+
+      if(addr != 0){
+        if(copyout(curproc->pagetable, curproc->sz, addr + (uint64)count * sizeof(struct pstat), (char *)&ps, sizeof(ps)) < 0)
+          return -1;
+      }
+      count++;
+    } else {
+      release(&p->lock);
+    }
+  }
+  return count;
+}
+
 // Per-CPU process scheduler.
 // Each CPU calls scheduler() after setting itself up.
 // Scheduler never returns.  It loops, doing:
