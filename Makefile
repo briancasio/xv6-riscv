@@ -158,7 +158,7 @@ UPROGS=\
 	$U/_ps\
 	$U/_pexec\
 	$U/_testpriority\
-	$U/_testpriority_sched\
+	$U/_testpsched\
 
 fs.img: mkfs/mkfs README $(UPROGS)
 	mkfs/mkfs fs.img README $(UPROGS)
